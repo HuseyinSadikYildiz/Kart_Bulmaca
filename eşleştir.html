@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>🧠 Hafıza Oyunu - Neon Stil</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background: #0f0f18;
+      margin: 0;
+      padding: 0 10px 40px;
+      color: #00fff7;
+      user-select: none;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-top: 30px;
+      font-weight: 900;
+      font-size: 2.8rem;
+      text-shadow:
+        0 0 5px #00fff7,
+        0 0 10px #00fff7,
+        0 0 20px #00fff7,
+        0 0 40px #00fff7;
+      position: relative;
+      z-index: 1;
+    }
+
+    #infoPanel {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+      font-size: 18px;
+      flex-wrap: wrap;
+      text-shadow:
+        0 0 5px #00fff7,
+        0 0 10px #00fff7;
+      position: relative;
+      z-index: 1;
+    }
+
+    #bestScore {
+      color: #00ff99;
+      text-shadow:
+        0 0 8px #00ff99,
+        0 0 15px #00ff99;
+    }
+
+    #gameMessage {
+      font-size: 22px;
+      margin: 20px;
+      min-height: 28px;
+      color: #ff00ff;
+      text-shadow:
+        0 0 5px #ff00ff,
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff;
+      position: relative;
+      z-index: 1;
+    }
+
+    .board {
+      display: grid;
+      justify-content: center;
+      grid-gap: 15px;
+      margin: 20px auto 40px;
+      max-width: 90vw;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      perspective: 600px;
+      cursor: pointer;
+      border-radius: 12px;
+      box-shadow:
+        0 0 8px #00fff7,
+        0 0 15px #00fff7,
+        inset 0 0 10px #00fff7;
+      transition: transform 0.3s;
+      user-select: none;
+    }
+
+    .card-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      transition: transform 0.4s;
+      transform-style: preserve-3d;
+      box-shadow:
+        0 0 8px #00fff7,
+        0 0 20px #00fff7;
+      background: linear-gradient(145deg, #001f3f, #003366);
+      color: #00fff7;
+      font-weight: 900;
+      font-size: 42px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+      background: linear-gradient(145deg, #00fff7, #00ccaa);
+      box-shadow:
+        0 0 15px #00ffcc,
+        0 0 25px #00ffcc;
+      color: #001f3f;
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card-front {
+      background: #001f3f;
+      box-shadow:
+        inset 0 0 10px #00fff7,
+        0 0 10px #00fff7;
+    }
+
+    .card-back {
+      background: #00fff7;
+      color: #001f3f;
+      transform: rotateY(180deg);
+      text-shadow:
+        0 0 6px #001f3f;
+    }
+
+    .matched .card-inner {
+      cursor: default;
+      background: #00ff99 !important;
+      color: #003300 !important;
+      box-shadow:
+        0 0 20px #00ff99,
+        0 0 40px #00ff99,
+        inset 0 0 15px #00ff99;
+    }
+
+    button {
+      background-color: #00fff7;
+      border: none;
+      color: #001f3f;
+      font-size: 16px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow:
+        0 0 10px #00fff7,
+        0 0 20px #00fff7;
+      transition: background-color 0.3s, color 0.3s;
+      user-select: none;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    button:hover {
+      background-color: #00ccaa;
+      color: #fff;
+      box-shadow:
+        0 0 15px #00ccaa,
+        0 0 25px #00ccaa;
+    }
+
+    /* Overlay feedback - tüm board üstünde */
+    #overlayFeedback {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;  /* yukarı hizalama */
+      padding-top: 80px;
+      font-size: 220px;
+      font-weight: 900;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+      color: #00ff33;
+      text-shadow:
+        0 0 30px #00ff33,
+        0 0 60px #00ff33,
+        0 0 90px #00ff33;
+      mix-blend-mode: screen;
+    }
+
+    #overlayFeedback.wrong {
+      color: #ff0033;
+      text-shadow:
+        0 0 30px #ff0033,
+        0 0 60px #ff0033,
+        0 0 90px #ff0033;
+    }
+
+    #overlayFeedback.show {
+      opacity: 1;
+    }
+
+    /* modal kutu - level up confirm */
+    #levelUpModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #001f3f;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow:
+        0 0 20px #00ff33,
+        0 0 40px #00ff33;
+      color: #00ff33;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      z-index: 10000;
+      user-select: none;
+      display: none; /* gizli başta */
+    }
+
+    #levelUpModal button {
+      margin: 15px 10px 0 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow:
+        0 0 10px #00ff33,
+        0 0 20px #00ff33;
+      transition: background-color 0.3s;
+    }
+
+    #levelUpModal button#yesBtn {
+      background-color: #00ff33;
+      color: #001f1a;
+    }
+
+    #levelUpModal button#yesBtn:hover {
+      background-color: #00cc28;
+    }
+
+    #levelUpModal button#noBtn {
+      background-color: #ff0033;
+      color: #330000;
+    }
+
+    #levelUpModal button#noBtn:hover {
+      background-color: #cc0028;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .card {
+        width: 60px;
+        height: 60px;
+      }
+      .card-inner {
+        font-size: 32px !important;
+      }
+      #infoPanel {
+        font-size: 16px;
+        gap: 20px;
+      }
+      #overlayFeedback {
+        font-size: 120px;
+        padding-top: 40px;
+      }
+      #levelUpModal {
+        width: 90vw;
+        padding: 20px 15px;
+        font-size: 16px;
+      }
+      #levelUpModal button {
+        font-size: 16px;
+        padding: 10px 15px;
+        margin: 10px 5px 0 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Hafıza Oyunu</h1>
+
+  <div id="infoPanel">
+    <div id="levelDisplay">Bölüm: 1 / 30</div>
+    <div id="timer">⏱ Süre: 0 sn</div>
+    <div id="score">🏆 Puan: 0</div>
+    <div id="bestScore">🔥 En Yüksek Puan: 0</div>
+  </div>
+  <div id="gameMessage"></div>
+  <div class="board" id="board"></div>
+  <div id="controlPanel">
+    <button id="restartBtn">🔄 Yeniden Başlat</button>
+  </div>
+
+  <!-- Overlay için -->
+  <div id="overlayFeedback"></div>
+
+  <audio id="soundMatch" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+  <audio id="soundFail" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+  <audio id="soundLevelUp" src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg" preload="auto"></audio>
+
+  <script>
+    const allSymbols = ["🍎","🎈","🐶","🚗","🌟","🍄","🐱","🍉","🎁","🦊","🐸","🍔","🚀","🧃","🕹️","⛵","🎧","🎮","🐧","🍪"];
+    let level = 1;
+    const maxLevel = 30;
+    let openedCards = [];
+    let lockBoard = false;
+    let time = 0;
+    let score = 0;
+    let timerInterval;
+    let flipBackTimeout;
+    let overlayTimeout;
+
+    const board = document.getElementById("board");
+    const gameMessage = document.getElementById("gameMessage");
+    const scoreDisplay = document.getElementById("score");
+    const levelDisplay = document.getElementById("levelDisplay");
+    const timerDisplay = document.getElementById("timer");
+    const bestScoreDisplay = document.getElementById("bestScore");
+    const overlayFeedback = document.getElementById("overlayFeedback");
+
+    const soundMatch = document.getElementById("soundMatch");
+    const soundFail = document.getElementById("soundFail");
+    const soundLevelUp = document.getElementById("soundLevelUp");
+
+    // Yüksek skoru localStorage'dan al
+    let bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
+    bestScoreDisplay.textContent = `🔥 En Yüksek Puan: ${bestScore}`;
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      level = 1;
+      score = 0;
+      lockBoard = false;
+      startLevel();
+      gameMessage.textContent = "🔄 Oyun yeniden başlatıldı!";
+      levelUpModal.style.display = "none";
+    });
+
+    // Bölüm atlama modalı
+    const levelUpModal = document.createElement('div');
+    levelUpModal.id = "levelUpModal";
+    levelUpModal.innerHTML = `
+      <div>Bir sonraki bölüme geçmek ister misin?</div>
+      <button id="yesBtn">Evet</button>
+      <button id="noBtn">Hayır</button>
+    `;
+    document.body.appendChild(levelUpModal);
+
+    document.getElementById("yesBtn").addEventListener("click", () => {
+      levelUpModal.style.display = "none";
+      lockBoard = false;
+      level++;
+      startLevel();
+      gameMessage.textContent = "";
+    });
+
+    document.getElementById("noBtn").addEventListener("click", () => {
+      levelUpModal.style.display = "none";
+      gameMessage.textContent = "Oyun durduruldu. Tekrar başlatmak için Yeniden Başlat butonuna bas.";
+      lockBoard = true;
+    });
+
+    function startLevel() {
+      clearInterval(timerInterval);
+      clearTimeout(flipBackTimeout);
+      clearTimeout(overlayTimeout);
+
+      time = 0;
+      openedCards = [];
+      lockBoard = false;
+
+      timerDisplay.textContent = `⏱ Süre: 0 sn`;
+      scoreDisplay.textContent = `🏆 Puan: ${score}`;
+      levelDisplay.textContent = `Bölüm: ${level} / ${maxLevel}`;
+      gameMessage.textContent = "";
+
+      board.innerHTML = "";
+      const pairCount = 3 + level;
+      const symbols = generateSymbols(pairCount);
+      const totalCards = pairCount * 2;
+      const columns = Math.min(Math.ceil(Math.sqrt(totalCards)), 8);
+      board.style.gridTemplateColumns = `repeat(${columns}, 80px)`;
+
+      symbols.forEach((symbol, index) => {
+        const card = document.createElement("div");
+        card.classList.add("card");
+        card.dataset.index = index;
+        card.dataset.symbol = symbol;
+
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front"></div>
+            <div class="card-back">${symbol}</div>
+          </div>
+        `;
+
+        card.addEventListener("click", () => handleCardClick(card));
+        board.appendChild(card);
+      });
+
+      timerInterval = setInterval(() => {
+        time++;
+        timerDisplay.textContent = `⏱ Süre: ${time} sn`;
+      }, 1000);
+    }
+
+    function generateSymbols(pairCount) {
+      let selected = [];
+      while (selected.length < pairCount) {
+        const sym = allSymbols[Math.floor(Math.random() * allSymbols.length)];
+        if (!selected.includes(sym)) selected.push(sym);
+      }
+      let symbols = [...selected, ...selected];
+      return symbols.sort(() => 0.5 - Math.random());
+    }
+
+    function showOverlayFeedback(isCorrect) {
+      clearTimeout(overlayTimeout);
+      overlayFeedback.textContent = isCorrect ? "✔️" : "❌";
+      overlayFeedback.classList.toggle("wrong", !isCorrect);
+      overlayFeedback.classList.add("show");
+
+      overlayTimeout = setTimeout(() => {
+        overlayFeedback.classList.remove("show");
+      }, 1500);
+    }
+
+    function handleCardClick(card) {
+      if (lockBoard || card.classList.contains("matched") || openedCards.includes(card)) return;
+
+      flipCard(card);
+      openedCards.push(card);
+
+      if (openedCards.length === 2) {
+        lockBoard = true;
+        const [first, second] = openedCards;
+
+        if (first.dataset.symbol === second.dataset.symbol) {
+          first.classList.add("matched");
+          second.classList.add("matched");
+          soundMatch.play();
+
+          showOverlayFeedback(true);
+
+          score += Math.max(10, 100 - time + level * 5);
+          scoreDisplay.textContent = `🏆 Puan: ${score}`;
+
+          openedCards = [];
+          lockBoard = false;
+
+          if(score > bestScore) {
+            bestScore = score;
+            localStorage.setItem("bestScore", bestScore);
+            bestScoreDisplay.textContent = `🔥 En Yüksek Puan: ${bestScore}`;
+          }
+
+          const all = document.querySelectorAll(".card");
+          const matched = document.querySelectorAll(".matched");
+          if (matched.length === all.length) {
+            clearInterval(timerInterval);
+            showOverlayFeedback(true);
+
+            if (level < maxLevel) {
+              levelUpModal.style.display = "block";
+              lockBoard = true;
+            } else {
+              gameMessage.textContent = "🎉 Tebrikler! Tüm bölümler tamamlandı.";
+            }
+          }
+        } else {
+          soundFail.play();
+
+          showOverlayFeedback(false);
+
+          // Yanlış eşleşmede mesaj gösterilmez
+          flipBackTimeout = setTimeout(() => {
+            openedCards.forEach(c => unflipCard(c));
+            openedCards = [];
+            lockBoard = false;
+            gameMessage.textContent = "";
+          }, level < 10 ? 1200 : 800);
+        }
+      }
+    }
+
+    function flipCard(card) {
+      card.classList.add("flipped");
+    }
+
+    function unflipCard(card) {
+      card.classList.remove("flipped");
+    }
+
+    startLevel();
+  </script>
+</body>
+</html>
